@@ -1,0 +1,41 @@
+name: Quality and MySQL integration
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.lock -r requirements-dev.txt
+      - run: python -m pytest -q --junitxml=artifacts/pytest.xml
+      - run: python -m ai_service.classifier > artifacts/model-training.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-and-model
+          path: |
+            artifacts/
+            docs/ai-metrics.json
+  mysql-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Ephemeral configuration
+        run: |
+          python -c "import secrets; from pathlib import Path; Path('.env').write_text('\n'.join(k+'='+secrets.token_hex(20) for k in ['MYSQL_PASSWORD','AI_SERVICE_TOKEN','ADMIN_INVITE_CODE','TECHNICIAN_INVITE_CODE'])+'\nDEMO_PASSWORD=CI-Test-Password12345\n')"
+      - run: docker compose up -d --build --wait
+      - run: docker compose exec -T backend python -m app.seed
+      - run: pip install httpx
+      - run: python scripts/live_smoke.py
+        env:
+          DEMO_PASSWORD: CI-Test-Password12345
+      - name: Diagnostics
+        if: failure()
+        run: docker compose logs --tail=100
+      - if: always()
+        run: docker compose down -v

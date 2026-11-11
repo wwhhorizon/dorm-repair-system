@@ -1,0 +1,59 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: repair
+      MYSQL_USER: repair
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysqladmin ping -h localhost -u repair --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  backend:
+    build: .
+    ports: ['127.0.0.1:8000:8000']
+    environment:
+      DATABASE_URL: mysql+pymysql://repair:${MYSQL_PASSWORD}@db:3306/repair?charset=utf8mb4
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?set AI_SERVICE_TOKEN}
+      ADMIN_INVITE_CODE: ${ADMIN_INVITE_CODE:?set ADMIN_INVITE_CODE}
+      TECHNICIAN_INVITE_CODE: ${TECHNICIAN_INVITE_CODE:?set TECHNICIAN_INVITE_CODE}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?set DEMO_PASSWORD}
+      AI_CONFIDENCE_THRESHOLD: ${AI_CONFIDENCE_THRESHOLD:-0.35}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  ai:
+    build: .
+    command: [uvicorn, 'ai_service.main:app', --host, 0.0.0.0, --port, '8001']
+    environment:
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  worker:
+    build: .
+    command: [python, -m, ai_service.worker]
+    environment:
+      BACKEND_URL: http://backend:8000
+      AI_URL: http://ai:8001
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN}
+      AI_POLL_SECONDS: ${AI_POLL_SECONDS:-5}
+    depends_on:
+      backend: {condition: service_healthy}
+      ai: {condition: service_healthy}
+volumes:
+  mysql_data:
+  uploads:
