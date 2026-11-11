@@ -15,7 +15,7 @@ def main():
             page.add_script_tag(path=str(path));reports[name]=page.evaluate(check)
         page.goto('http://127.0.0.1:8000');audit('login')
         page.screenshot(path='artifacts/login-desktop.png',full_page=True)
-        page.locator('[name=username]').fill('admin');page.locator('[name=password]').fill(os.environ['DEMO_PASSWORD']);page.locator('#auth-submit').click();page.locator('.metrics').wait_for();audit('dashboard')
+        page.locator('[name=username]').fill(os.getenv('DEMO_ADMIN','admin'));page.locator('[name=password]').fill(os.environ['DEMO_PASSWORD']);page.locator('#auth-submit').click();page.locator('.metrics').wait_for();audit('dashboard')
         page.screenshot(path='artifacts/dashboard-desktop.png',full_page=True)
         page.locator('#nav [data-page=tickets]').click();page.locator('table').wait_for();audit('tickets')
         page.locator('[data-ticket]').first.click();page.locator('#detail').wait_for();audit('detail')

@@ -62,29 +62,81 @@ export function icon(name) {
     .map((d, i) => `<path d="${i ? "M" : ""}${d}"/>`)
     .join("")}</svg>`;
 }
-export function dashboard(s) {
+export function dashboard(s, records = []) {
   const role = state.user.role;
-  const ratio = s.total ? Math.round((s.completed / s.total) * 100) : 0;
-  const today = new Intl.DateTimeFormat("zh-CN", {
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  }).format(new Date());
-  const intro =
-    role === "student"
-      ? "宿舍有问题，随时在这里报修。"
+  const wanted =
+    role === "admin"
+      ? ["pending"]
       : role === "technician"
-        ? "查看分配给你的任务，安排今天的维修。"
-        : "查看报修情况，为待处理的问题安排下一步。";
-  return `<section class="welcome"><div><div class="welcome-date">${today}</div><h2>${role === "student" ? "让宿舍，恢复好状态。" : role === "technician" ? "把问题，一件件解决。" : "报修服务，心中有数。"}</h2><p>${intro}</p><button class="primary" data-page="${role === "student" ? "new" : "tickets"}">${role === "student" ? "提交新报修" : "查看待办工单"} ${icon("arrow")}</button></div><figure class="campus-banner"><img src="/static/images/ustc-gaoxin-campus.webp" width="1920" height="1402" alt="中科大高新校区的建筑与水面倒影"><figcaption><span>中国科大 · 高新校区</span><a href="https://zsb.ustc.edu.cn/2024/0326/c35540a633997/page.htm" target="_blank" rel="noopener noreferrer">图片来源</a></figcaption></figure></section>${filters()}<div class="metrics"><article><span class="metric-icon">${icon("tickets")}</span><div><p>累计报修</p><strong>${s.total}</strong><small>当前筛选范围</small></div></article><article><span class="metric-icon amber">${icon("clock")}</span><div><p>待解决</p><strong>${s.open}</strong><small>尚未验收完成</small></div></article><article><span class="metric-icon mint">${icon("check")}</span><div><p>已完成</p><strong>${s.completed}</strong><small>已由学生确认</small></div></article><article><span class="metric-icon pale">${icon("clock")}</span><div><p>平均完工时长</p><strong>${s.average_hours ?? "—"}<em>小时</em></strong><small>创建至最终验收</small></div></article></div><div class="chart-grid"><section class="panel category-panel"><div class="panel-heading"><div><h2>问题分布</h2><p>了解哪些设施需要更多关注</p></div><span class="subtle-tag">按故障类别</span></div>${bars(s.categories, categories)}</section><section class="panel progress-panel"><div class="panel-heading"><div><h2>处理进度</h2><p>每张工单的当前状态</p></div></div><div class="progress-overview"><svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="完成比例 ${ratio}%"><circle cx="60" cy="60" r="48" fill="none" stroke="#eef2f6" stroke-width="10"/><circle cx="60" cy="60" r="48" fill="none" stroke="#3e8b76" stroke-width="10" stroke-dasharray="${ratio * 3.016} 301.6" stroke-linecap="round" transform="rotate(-90 60 60)"/><text x="60" y="57" text-anchor="middle" fill="#18344c" font-size="25" font-weight="600">${ratio}%</text><text x="60" y="77" text-anchor="middle" fill="#536b83" font-size="10">已验收完成</text></svg><div>${bars(s.states, states)}</div></div></section><section class="panel trend-panel"><div class="panel-heading"><div><h2>报修趋势</h2><p>按创建日期汇总</p></div></div>${Object.keys(s.days).length ? bars(s.days, Object.fromEntries(Object.keys(s.days).map((d) => [d, d.slice(5)]))) : '<div class="empty">还没有报修记录。创建工单后，趋势会显示在这里。</div>'}</section><section class="panel rating-panel"><div class="panel-heading"><div><h2>服务评价</h2><p>来自已完成工单的反馈</p></div><span class="rating-number">${s.average_rating ?? "—"}<small> / 5</small></span></div>${bars(s.ratings, { 5: "5 星", 4: "4 星", 3: "3 星", 2: "2 星", 1: "1 星" })}</section></div><p class="footnote">统计按当前筛选范围展示，实时连接会自动刷新数据。</p>`;
+        ? ["assigned", "working"]
+        : ["review", "pending", "assigned", "working"];
+  const work = records
+    .filter((t) => wanted.includes(t.status))
+    .sort((a, b) => wanted.indexOf(a.status) - wanted.indexOf(b.status));
+  const heading =
+    role === "admin"
+      ? "待受理报修"
+      : role === "technician"
+        ? "待处理任务"
+        : "我的报修";
+  const visible = (
+    role === "student"
+      ? [...work, ...records.filter((t) => !wanted.includes(t.status))]
+      : work
+  ).slice(0, 5);
+  const empty = role === "student" ? "还没有报修记录" : "当前没有待处理工单";
+  const action = role === "student" ? "提交报修" : "查看全部工单";
+  const metrics = [
+    ["报修总数", s.total, "tickets"],
+    ["待处理", s.open, "clock"],
+    ["已完成", s.completed, "check"],
+    [
+      "平均处理时间",
+      s.average_hours === null
+        ? "—"
+        : s.average_hours < 1
+          ? s.average_hours < 1 / 60
+            ? "不足 1"
+            : Math.round(s.average_hours * 60)
+          : s.average_hours,
+      "clock",
+    ],
+  ];
+  return `<section class="campus-strip"><div><h2>${role === "student" ? "宿舍报修" : role === "technician" ? "维修工作台" : "报修管理"}</h2><p>中科大高新校区</p></div><button class="primary" data-page="${role === "student" ? "new" : "tickets"}">${action}${icon("arrow")}</button><img src="/static/images/ustc-gaoxin-campus.webp" alt="高新校区建筑与水面" width="1920" height="1402"><a class="photo-credit" href="https://zsb.ustc.edu.cn/2024/0326/c35540a633997/page.htm" target="_blank" rel="noopener noreferrer">校园影像</a></section>
+  ${filters()}<div class="metrics">${metrics.map(([label, value, ic], i) => `<article><span class="metric-icon ${i === 1 ? "amber" : i === 2 ? "mint" : ""}">${icon(ic)}</span><div><p>${label}</p><strong>${value}${i === 3 && s.average_hours !== null ? `<em>${s.average_hours < 1 ? "分钟" : "小时"}</em>` : ""}</strong></div></article>`).join("")}</div>
+  <section class="panel work-queue"><div class="panel-heading"><h2>${heading}</h2><button class="text" data-page="tickets">全部工单 ${icon("arrow")}</button></div>${visible.length ? visible.map((t) => `<button class="queue-row" data-ticket="${t.id}"><span class="queue-number">#${t.id}</span><span class="queue-description"><strong>${esc(t.description)}</strong><small>${esc(t.building)} · ${esc(t.room)}${t.scheduled_at ? " · 预约 " + date(t.scheduled_at) : ""}</small></span>${badge(t.status)}<span class="queue-arrow">${icon("arrow")}</span></button>`).join("") : `<div class="empty"><span class="empty-icon">${icon("tickets")}</span><h3>${empty}</h3><p>${role === "student" ? "设施出现故障时，在这里提交并跟进维修。" : "新的报修和待办会显示在这里。"}</p>${role === "student" ? '<button class="primary" data-page="new">提交报修</button>' : ""}</div>`}</section>
+  <div class="chart-grid" ${s.total ? "" : "hidden"}><section class="panel category-panel"><div class="panel-heading"><h2>故障分类</h2><span class="subtle-tag">${s.total} 张</span></div>${s.total ? bars(s.categories, categories) : '<p class="chart-empty">暂无分类记录</p>'}</section><section class="panel progress-panel"><div class="panel-heading"><h2>工单状态</h2><span class="subtle-tag">${s.average_rating === null ? "暂无评价" : "服务评分 " + s.average_rating + " / 5"}</span></div>${s.total ? bars(s.states, states) : '<p class="chart-empty">暂无处理记录</p>'}</section><section class="panel trend-panel"><div class="panel-heading"><h2>报修趋势</h2></div>${Object.keys(s.days).length ? bars(s.days, Object.fromEntries(Object.keys(s.days).map((d) => [d, d.slice(5)]))) : '<p class="chart-empty">提交报修后显示每日数量</p>'}</section><section class="panel rating-panel"><div class="panel-heading"><h2>维修评价</h2></div>${Object.keys(s.ratings).length ? bars(s.ratings, { 5: "5 星", 4: "4 星", 3: "3 星", 2: "2 星", 1: "1 星" }) : '<p class="chart-empty">验收完成后可以评价维修服务</p>'}</section></div>`;
 }
 export function tickets(data) {
-  return `<div class="section-head"><p class="muted">共 ${data.total} 张工单 · 第 ${state.listPage} 页</p>${state.user.role === "admin" ? '<button data-action="export" class="ghost">导出 CSV</button>' : ""}${state.user.role === "student" ? '<button data-page="new" class="primary">＋ 提交报修</button>' : ""}</div>${filters(true)}<section class="panel table-panel"><table><thead><tr><th>工单 / 问题</th><th>位置</th><th>分类</th><th>状态</th><th>维修人员</th><th>提交时间</th><th></th></tr></thead><tbody>${data.items.map((t) => `<tr><td><strong>#${t.id}</strong> ${esc(t.description.slice(0, 42))}</td><td>${esc(t.building)} · ${esc(t.room)}</td><td>${categories[t.category]}</td><td>${badge(t.status)}</td><td>${esc(t.assignee || "待分配")}</td><td>${date(t.created_at)}</td><td><button class="text" data-ticket="${t.id}">查看详情</button></td></tr>`).join("") || '<tr><td colspan="7" class="empty">暂无工单。提交第一张报修单，开始记录问题。</td></tr>'}</tbody></table></section><div class="pagination"><button class="ghost" data-action="previous" ${state.listPage === 1 ? "disabled" : ""}>上一页</button><button class="ghost" data-action="next" ${state.listPage * 30 >= data.total ? "disabled" : ""}>下一页</button></div>`;
+  return `<div class="section-head"><p class="muted">${data.total} 张工单 · 第 ${state.listPage} 页</p>${state.user.role === "admin" ? '<button data-action="export" class="ghost">导出工单</button>' : ""}${state.user.role === "student" ? '<button data-page="new" class="primary">＋ 提交报修</button>' : ""}</div>${filters(true)}<section class="panel table-panel"><table><thead><tr><th>工单 / 问题</th><th>位置</th><th>分类</th><th>状态</th><th>维修人员</th><th>提交时间</th><th></th></tr></thead><tbody>${data.items.map((t) => `<tr><td><strong>#${t.id}</strong> ${esc(t.description.slice(0, 42))}</td><td>${esc(t.building)} · ${esc(t.room)}</td><td>${categories[t.category]}</td><td>${badge(t.status)}</td><td>${esc(t.assignee || "待分配")}</td><td>${date(t.created_at)}</td><td><button class="text" data-ticket="${t.id}">查看详情</button></td></tr>`).join("") || '<tr><td colspan="7" class="empty">没有符合条件的工单</td></tr>'}</tbody></table></section><div class="pagination"><button class="ghost" data-action="previous" ${state.listPage === 1 ? "disabled" : ""}>上一页</button><button class="ghost" data-action="next" ${state.listPage * 30 >= data.total ? "disabled" : ""}>下一页</button></div>`;
 }
 export function newTicket() {
-  return `<form id="ticket-form" class="panel editor"><h2>哪里需要维修？</h2><p class="muted">请描述故障现象。详细的信息可以帮助维修人员提前准备。</p><div class="two-cols"><label>宿舍楼<select name="building" id="building-select" required><option value="">请选择楼栋</option>${options(Object.fromEntries(state.locations.map((b) => [b.id, b.name])))}</select></label><label>房间<select name="room_id" id="room-select" required><option value="">请先选择楼栋</option></select></label></div><label>问题类别<select name="category">${options(categories, "other")}</select></label><label>问题描述<textarea name="description" minlength="5" maxlength="2000" required rows="6" placeholder="例如：洗手池下方水管持续漏水，地面有积水。"></textarea></label><label>现场照片（选填）<input type="file" name="image" accept="image/png,image/jpeg,image/webp"><small>JPEG、PNG 或 WebP，每张最多5MB。请避免拍摄个人隐私。</small></label><p class="hint">提交后，系统会给出故障分类建议，由管理员确认并安排维修。</p><button class="primary">提交报修</button></form>`;
+  return `<form id="ticket-form" class="panel editor"><h2>哪里需要维修？</h2><p class="muted">请描述故障现象。详细的信息可以帮助维修人员提前准备。</p><div class="two-cols"><label>宿舍楼<select name="building" id="building-select" required><option value="">请选择楼栋</option>${options(Object.fromEntries(state.locations.map((b) => [b.id, b.name])))}</select></label><label>房间<select name="room_id" id="room-select" required><option value="">请先选择楼栋</option></select></label></div><label>问题类别<select name="category">${options(categories, "other")}</select></label><label>问题描述<textarea name="description" minlength="5" maxlength="2000" required rows="6" placeholder="例如：洗手池下方水管持续漏水，地面有积水。"></textarea></label><label>现场照片（选填）<input type="file" name="image" accept="image/png,image/jpeg,image/webp"><small>支持 JPG、PNG、WebP，最大 5 MB</small></label><button class="primary">提交报修</button></form>`;
+}
+export function eventNote(e) {
+  let note = e.note || "";
+  if (e.action === "classify")
+    for (const [key, label] of Object.entries(categories))
+      note = note.replaceAll(key, label);
+  if (e.action === "assign")
+    note = note.replace(
+      /时间 (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
+      (_, value) => "预约 " + date(value.replace(" ", "T")),
+    );
+  return esc(note);
 }
 export function detail(t) {
+  const actions = {
+    create: "提交报修",
+    assign: "安排维修",
+    start: "开始维修",
+    finish: "维修完成",
+    accept: "验收通过",
+    reject: "申请返修",
+    cancel: "取消报修",
+    classify: "确认分类",
+    comment: "补充说明",
+  };
   let controls = "";
   const role = state.user.role;
   if (role === "student" && t.status === "pending")
@@ -100,11 +152,11 @@ export function detail(t) {
     controls +=
       '<button name="action" value="accept" class="primary">确认验收</button><button name="action" value="reject" class="ghost">申请返修</button>';
   const open = !["completed", "cancelled"].includes(t.status);
-  return `<div class="detail-summary"><span class="eyebrow">REPAIR #${t.id}</span>${badge(t.status)}<h2>${esc(t.description)}</h2><p class="muted">${esc(t.building)} · ${esc(t.room)}　${categories[t.category]}</p></div><div class="two-cols meta"><p>报修人 <strong>${esc(t.student)}</strong></p><p>维修人员 <strong>${esc(t.assignee || "待分配")}</strong></p><p>提交时间 <strong>${date(t.created_at)}</strong></p><p>预约维修 <strong>${date(t.scheduled_at)}</strong></p></div><div class="hint">${t.prediction ? `智能分类建议：<strong>${categories[t.prediction.category]}</strong> · 模型分数 ${(t.prediction.confidence * 100).toFixed(1)}%<br><small>此分数不等于准确率。模型 ${esc(t.prediction.model_version)}，管理员可人工确认或修正。</small>` : "智能分类暂未返回，管理员可直接人工分类和派单。"}</div><div class="attachments">${t.attachments.map((a) => `<a href="${a.url}" target="_blank"><img width="110" height="90" loading="lazy" src="${a.url}" alt="${a.purpose === "repair" ? "维修结果" : "报修现场"}照片"></a>`).join("")}</div>${open ? '<form id="attachment-form"><label>补充图片<input type="file" name="image" accept="image/png,image/jpeg,image/webp" required></label><button class="ghost">上传图片</button></form>' : ""}<h3>处理记录</h3><ol class="timeline">${t.events.map((e) => `<li><span>${date(e.created_at)} · ${esc(e.actor)}</span><p>${esc(e.note || e.action)}</p><small>${states[e.from_state]} → ${states[e.to_state]}</small></li>`).join("")}</ol>${role === "admin" && open ? `<form id="classify-form" class="inline-form"><label>确认故障类别<select name="category">${options(categories, t.category)}</select></label><button class="ghost">保存分类</button></form>` : ""}${role === "admin" && ["pending", "assigned", "working"].includes(t.status) ? `<form id="assign-form" class="subform"><h3>${t.assignee ? "重新派单" : "安排维修"}</h3><div class="two-cols"><label>维修人员<select name="assignee_id" required><option value="">请选择</option>${options(Object.fromEntries(state.users.filter((u) => u.role === "technician" && u.active).map((u) => [u.id, u.username])), t.assignee_id)}</select></label><label>预约时间<input type="datetime-local" name="scheduled_at" required></label></div><label>派单说明${t.assignee ? "（必填）" : ""}<input name="note" ${t.assignee ? "required" : ""} maxlength="2000"></label><button class="primary">确认派单</button></form>` : ""}${open ? `<form id="action-form" class="subform"><label>处理说明 / 补充信息<textarea name="note" rows="3" maxlength="2000" placeholder="提交完工或申请返修时必须填写说明"></textarea></label><div class="button-row">${controls}<button name="action" value="comment" class="ghost">补充说明</button></div></form>` : ""}${role === "student" && t.status === "completed" && !t.evaluation ? '<form id="evaluation-form" class="subform"><h3>这次维修怎么样？</h3><label>评分<select name="score"><option value="5">5 星 · 很满意</option><option value="4">4 星 · 满意</option><option value="3">3 星 · 一般</option><option value="2">2 星 · 不满意</option><option value="1">1 星 · 很不满意</option></select></label><label>评价<input name="comment" maxlength="1000"></label><button class="primary">提交评价</button></form>' : ""}${t.evaluation ? `<p class="hint">服务评价：${t.evaluation.score} 星 · ${esc(t.evaluation.comment)}</p>` : ""}`;
+  return `<div class="detail-summary"><span class="eyebrow">工单 #${t.id}</span>${badge(t.status)}<h2>${esc(t.description)}</h2><p class="muted">${esc(t.building)} · ${esc(t.room)}　${categories[t.category]}</p></div><div class="two-cols meta"><p>报修人 <strong>${esc(t.student)}</strong></p><p>维修人员 <strong>${esc(t.assignee || "待分配")}</strong></p><p>提交时间 <strong>${date(t.created_at)}</strong></p><p>预约维修 <strong>${date(t.scheduled_at)}</strong></p></div><div class="hint">${t.prediction ? `建议分类 <strong>${categories[t.prediction.category]}</strong><details class="prediction-meta"><summary>查看分类详情</summary><small>匹配分数 ${(t.prediction.confidence * 100).toFixed(1)}% · ${esc(t.prediction.model_version)}</small></details>` : "正在识别故障类别…"}</div><div class="attachments">${t.attachments.map((a) => `<a href="${a.url}" target="_blank"><img width="110" height="90" loading="lazy" src="${a.url}" alt="${a.purpose === "repair" ? "维修结果" : "报修现场"}照片"></a>`).join("")}</div>${open ? '<form id="attachment-form"><label>补充图片<input type="file" name="image" accept="image/png,image/jpeg,image/webp" required></label><button class="ghost">上传图片</button></form>' : ""}${role === "admin" && open ? `<form id="classify-form" class="inline-form"><label>确认故障类别<select name="category">${options(categories, t.category)}</select></label><button class="ghost">保存分类</button></form>` : ""}${role === "admin" && ["pending", "assigned", "working"].includes(t.status) ? `<form id="assign-form" class="subform"><h3>${t.assignee ? "重新派单" : "安排维修"}</h3><div class="two-cols"><label>维修人员<select name="assignee_id" required><option value="">请选择</option>${options(Object.fromEntries(state.users.filter((u) => u.role === "technician" && u.active).map((u) => [u.id, u.username])), t.assignee_id)}</select></label><label>预约时间<input type="datetime-local" name="scheduled_at" required></label></div><label>派单说明${t.assignee ? "（必填）" : ""}<input name="note" ${t.assignee ? "required" : ""} maxlength="2000"></label><button class="primary">确认派单</button></form>` : ""}${open ? `<form id="action-form" class="subform"><label>处理说明<textarea name="note" rows="3" maxlength="2000" placeholder="填写处理结果或需要补充的情况"></textarea></label><div class="button-row">${controls}<button name="action" value="comment" class="ghost">补充说明</button></div></form>` : ""}${role === "student" && t.status === "completed" && !t.evaluation ? '<form id="evaluation-form" class="subform"><h3>这次维修怎么样？</h3><label>评分<select name="score"><option value="5">5 星 · 很满意</option><option value="4">4 星 · 满意</option><option value="3">3 星 · 一般</option><option value="2">2 星 · 不满意</option><option value="1">1 星 · 很不满意</option></select></label><label>评价<input name="comment" maxlength="1000"></label><button class="primary">提交评价</button></form>' : ""}${t.evaluation ? `<p class="hint">服务评价：${t.evaluation.score} 星 · ${esc(t.evaluation.comment)}</p>` : ""}<h3>处理记录</h3><ol class="timeline">${t.events.map((e) => `<li><span>${date(e.created_at)} · ${esc(e.actor)}</span><p><strong>${actions[e.action] || esc(e.action)}</strong>${e.note ? `<br>${eventNote(e)}` : ""}</p><small>${states[e.from_state]} → ${states[e.to_state]}</small></li>`).join("")}</ol>`;
 }
 export function users(data) {
-  return `<section class="panel"><h2>账号管理</h2><p class="muted">学生自行注册；维修人员和管理员通过邀请码注册。</p><div class="table-panel"><table><thead><tr><th>用户名</th><th>角色</th><th>邮箱</th><th>状态</th><th>操作</th></tr></thead><tbody>${data.map((u) => `<tr><td>${esc(u.username)}</td><td>${roles[u.role]}</td><td>${esc(u.email || "—")}</td><td>${u.active ? "启用" : "停用"}</td><td>${u.role !== "admin" ? `<button class="text" data-user="${u.id}" data-active="${u.active ? "0" : "1"}">${u.active ? "停用" : "启用"}</button>` : "—"}</td></tr>`).join("")}</tbody></table></div></section><section class="panel"><h2>宿舍位置</h2><p>${state.locations.map((b) => `${esc(b.name)}：${b.rooms.map((r) => esc(r.name)).join("、")}`).join("<br>") || "请先添加楼栋和房间"}</p><form id="location-form" class="inline-form"><label>位置类型<select name="building_id"><option value="">新建楼栋</option>${options(Object.fromEntries(state.locations.map((b) => [b.id, "添加房间至 " + b.name])))}</select></label><label>名称<input name="name" required maxlength="30"></label><button class="ghost">添加</button></form></section>`;
+  return `<section class="panel"><h2>账号管理</h2><p class="muted">管理账号状态与访问身份。</p><div class="table-panel"><table><thead><tr><th>用户名</th><th>角色</th><th>邮箱</th><th>状态</th><th>操作</th></tr></thead><tbody>${data.map((u) => `<tr><td>${esc(u.username)}</td><td>${roles[u.role]}</td><td>${esc(u.email || "—")}</td><td>${u.active ? "启用" : "停用"}</td><td>${u.role !== "admin" ? `<button class="text" data-user="${u.id}" data-active="${u.active ? "0" : "1"}">${u.active ? "停用" : "启用"}</button>` : "—"}</td></tr>`).join("")}</tbody></table></div></section><section class="panel"><h2>宿舍位置</h2><p>${state.locations.map((b) => `${esc(b.name)}：${b.rooms.map((r) => esc(r.name)).join("、")}`).join("<br>") || "请先添加楼栋和房间"}</p><form id="location-form" class="inline-form"><label>位置类型<select name="building_id"><option value="">新建楼栋</option>${options(Object.fromEntries(state.locations.map((b) => [b.id, "添加房间至 " + b.name])))}</select></label><label>名称<input name="name" required maxlength="30"></label><button class="ghost">添加</button></form></section>`;
 }
 export function settings() {
-  return `<form id="password-form" class="panel editor"><h2>修改密码</h2><p class="muted">修改后所有设备上的登录都会失效，需要重新登录。</p><label>原密码<input type="password" name="old_password" required autocomplete="current-password"></label><label>新密码<input type="password" name="new_password" required minlength="10" maxlength="64" autocomplete="new-password"><small>至少10位，同时包含字母和数字</small></label><button class="primary">保存新密码</button></form>`;
+  return `<form id="password-form" class="panel editor"><h2>修改密码</h2><p class="muted">保存后请使用新密码重新登录。</p><label>原密码<input type="password" name="old_password" required autocomplete="current-password"></label><label>新密码<input type="password" name="new_password" required minlength="10" maxlength="64" autocomplete="new-password"><small>至少10位，同时包含字母和数字</small></label><button class="primary">保存新密码</button></form>`;
 }

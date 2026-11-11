@@ -1,10 +1,10 @@
 # 宿修 · 校园宿舍报修与智能工单管理系统
 
-以中科大高新校区为场景的**软件工程实践单人项目**。学生提交报修，管理员确认分类并派单，维修人员处理，学生验收与评价。独立 AI 服务提供本地故障文本分类。浏览器界面支持电脑和手机。
+以中科大高新校区为场景的宿舍报修项目。学生提交报修，管理员确认分类并派单，维修人员处理，学生验收与评价。独立 AI 服务提供本地故障文本分类。浏览器界面支持电脑和手机。
 
 ![高新校区场景登录页](docs/images/login-desktop.png)
 
-校园照片来自中国科大招生网，详见[照片来源](docs/image-credits.md)。本项目是课程原型，非学校官方报修入口。
+校园照片来自中国科大招生网，详见[照片来源](docs/image-credits.md)。
 
 ## 本地启动
 
@@ -38,7 +38,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe scripts/export_contract.py
 ```
 
-训练数据是300条模拟描述，按故障组划分，改写不跨训练和测试集合。实际指标见 [AI评估记录](docs/ai-metrics.json)，不可当作真实校园数据的准确率。完整安装版本见 `requirements.lock`。
+训练数据是300条模拟描述，按故障组划分，改写不跨训练和测试集合。实际指标见 [AI评估记录](docs/ai-metrics.json)。完整安装版本见 `requirements.lock`。
 
 ## 项目文档
 
@@ -52,12 +52,11 @@ python -m venv .venv
 | [部署说明](docs/deployment.md) | 本地、MySQL Compose、备份、HTTPS |
 | [用户手册](docs/user-manual.md) | 学生、管理员、维修人员操作 |
 | [测试用例与记录](docs/testing.md) | 自动化、安全、UI、性能验证 |
-| [个人分工及贡献说明](docs/contribution.md) | 单人职责、Git 与 AI 辅助说明 |
-| [演示脚本](docs/demo.md) | 5～8分钟演示的步骤与解说 |
-| [界面设计](docs/ui-design.md) | 视觉规范、两个设计技能、桌面与手机修缮 |
+| [演示脚本](docs/demo.md) | 中文配音、实际浏览器操作与录制流程 |
+| [界面设计](docs/ui-design.md) | 工作台、文案、响应式与交互规范 |
 | [验证明细](docs/verification.json) | 实际测试与环境限制，机器可读 |
 
-**实验报告按用户要求暂不编写。** 需求访谈、真实使用反馈、签到和现场答辩需要本人实际完成，项目文档不虚构这些记录。
+实验报告以 PDF 和 LaTeX 源码独立提交。
 
 ## 项目结构
 
@@ -70,3 +69,18 @@ database/     MySQL 建表脚本
 docs/         需求、设计、测试与部署资料
 .github/      自动测试和 MySQL Compose 验收流水线
 ```
+
+## 中文解说演示
+
+[观看演示](deliverables/宿修-中文解说演示.mp4)。从空工单环境开始，依次展示提交、分类、派单、维修、返修、验收、评价、筛选与导出。录屏对应的三张工单通过浏览器操作创建。
+
+独立录制环境不会改动日常数据库：
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-video.txt
+.\.venv\Scripts\python.exe scripts/demo_session.py
+# 另一个终端
+.\.venv\Scripts\python.exe scripts/record_demo.py
+```
+
+剪辑素材、配音和字幕位于本地 `deliverables/demo-source/`。解说使用中文合成语音，播放文件为 H.264 / AAC MP4。

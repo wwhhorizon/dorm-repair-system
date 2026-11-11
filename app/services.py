@@ -1,6 +1,7 @@
 import csv
 import io
 from collections import Counter
+from datetime import timedelta
 from sqlalchemy import update
 from fastapi import HTTPException
 from app.models import Ticket, User, Event, AuditLog, Evaluation, Prediction, Room, Building, now
@@ -25,6 +26,7 @@ def serialize(db, t):
 def transition(db, user, t, payload):
     action = payload.action
     old = t.status
+    old_category = t.category
     values = dict(version=t.version+1, updated_at=now())
     if payload.version != t.version:
         fail(409, '工单已更新，请刷新后重试')
@@ -66,7 +68,7 @@ def transition(db, user, t, payload):
     if action == 'assign':
         detail = f'分配给 {username(db,payload.assignee_id)}；时间 {payload.scheduled_at}。{detail}'
     if action == 'classify':
-        detail = f'分类确认：{t.category} → {payload.category}。{detail}'
+        detail = f'分类确认：{old_category} → {payload.category}。{detail}'
         p = db.query(Prediction).filter_by(ticket_id=t.id).first()
         if p: p.accepted = int(p.category == payload.category)
     db.add(Event(ticket_id=t.id, actor_id=user.id, action=action, from_state=old, to_state=target, note=detail))
@@ -80,7 +82,7 @@ def statistics(tickets):
     return dict(total=len(tickets), open=sum(t.status not in ['completed','cancelled'] for t in tickets),
         completed=len(completed), average_hours=round(sum((t.completed_at-t.created_at).total_seconds()/3600 for t in completed)/len(completed),2) if completed else None,
         categories=dict(Counter(t.category for t in tickets)), states=dict(Counter(t.status for t in tickets)),
-        days=dict(sorted(Counter(t.created_at.strftime('%Y-%m-%d') for t in tickets).items())))
+        days=dict(sorted(Counter((t.created_at + timedelta(hours=8)).strftime('%Y-%m-%d') for t in tickets).items())))
 
 def safe_cell(value):
     text = '' if value is None else str(value)

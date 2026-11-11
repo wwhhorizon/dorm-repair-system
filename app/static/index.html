@@ -23,13 +23,22 @@
           width="1281"
         />
         <span class="wordmark"
-          ><span aria-hidden="true" class="brand-glyph">⌂</span> 宿修
-          <small>中科大高新校区</small></span
+          ><span aria-hidden="true" class="brand-glyph"
+            ><svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M3 10 12 3l9 7v11H3V10Z M9 21v-8h6v8" /></svg
+          ></span>
+          宿修 <small>中科大高新校区</small></span
         >
         <div class="intro-message">
-          <p class="eyebrow">中国科学技术大学 · 高新校区</p>
-          <h1>在高新，<br />安心住。</h1>
-          <p>一处报修，全程跟进。<br />让每一次维修，都有清楚的进度。</p>
+          <h1>报修有着落，<br />生活照常。</h1>
+          <p>提交宿舍故障，查看维修进度。</p>
         </div>
 
         <div class="intro-footer">
@@ -43,7 +52,6 @@
         </div>
       </div>
       <form class="auth-form" id="auth-form">
-        <p class="eyebrow">欢迎使用宿修</p>
         <h2 id="auth-title">登录你的账号</h2>
         <p class="muted">查看报修进度，继续处理待办。</p>
         <label
@@ -61,7 +69,9 @@
             name="password"
             required=""
             type="password"
-          /><small>至少10位，同时包含字母和数字</small></label
+          /><small id="password-hint" hidden
+            >至少10位，包含字母和数字</small
+          ></label
         >
         <div hidden="" id="register-fields">
           <label
@@ -86,20 +96,29 @@
           还没有账号？注册
         </button>
         <p class="error" id="auth-error" role="alert"></p>
-        <p class="course-note">软件工程课程实践项目</p>
       </form>
     </section>
     <div class="shell" hidden="" id="shell">
       <aside>
         <a class="wordmark" href="/"
-          ><span aria-hidden="true" class="brand-glyph">⌂</span> 宿修
-          <small>中科大高新校区</small></a
+          ><span aria-hidden="true" class="brand-glyph"
+            ><svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M3 10 12 3l9 7v11H3V10Z M9 21v-8h6v8" /></svg
+          ></span>
+          宿修 <small>中科大高新校区</small></a
         >
         <p class="nav-caption">服务工作台</p>
         <nav aria-label="主要导航" id="nav"></nav>
         <div class="sidebar-note">
-          <span aria-hidden="true">⌁</span>
-          <p>每一张工单，<br />都有清楚的下一步。</p>
+          <p>校园设施维修</p>
+          <small>中国科学技术大学高新校区</small>
         </div>
         <div class="sidebar-bottom">
           <div aria-hidden="true" class="avatar"></div>
@@ -110,7 +129,7 @@
       <main>
         <header>
           <div>
-            <p class="eyebrow" id="role-caption"></p>
+            <p id="role-caption" hidden></p>
             <h1 id="page-title"></h1>
           </div>
           <div class="header-tools">

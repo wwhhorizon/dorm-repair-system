@@ -65,3 +65,17 @@ def test_date_building_category_filters(clients,ticket):
 def test_websocket_scoping(clients,ticket):
     with clients['student'].websocket_connect('/ws/dashboard') as ws:assert ws.receive_json()['total']==1
     with clients['other'].websocket_connect('/ws/dashboard') as ws:assert ws.receive_json()['total']==0
+
+def test_classification_history_keeps_previous_category(clients,ticket):
+    response=clients['admin'].post(f"/api/tickets/{ticket['id']}/actions",json={
+        'action':'classify','version':ticket['version'],'category':'electric'})
+    assert response.status_code==200
+    detail=clients['admin'].get(f"/api/tickets/{ticket['id']}").json()
+    assert 'water → electric' in detail['events'][-1]['note']
+
+def test_trend_groups_china_midnight_into_local_day(clients,ticket):
+    with clients['factory']() as db:
+        row=db.get(Ticket,ticket['id'])
+        row.created_at=datetime(2026,11,11,16,5)
+        db.commit()
+    assert clients['admin'].get('/api/statistics').json()['days']=={'2026-11-12':1}

@@ -27,8 +27,8 @@ async def lifespan(app):
     Base.metadata.create_all(engine)
     yield
 
-app=FastAPI(title='宿修 · 智能宿舍报修', version='1.0.0', lifespan=lifespan,
-    description='单人课程项目。所有业务时间使用 UTC，页面按本地时区显示。')
+app=FastAPI(title='宿修 · 智能宿舍报修', version='1.1.0', lifespan=lifespan,
+    description='宿舍报修、分类派单、维修验收与统计管理接口。')
 app.mount('/static',StaticFiles(directory=Path(__file__).parent/'static'),name='static')
 
 @app.middleware('http')

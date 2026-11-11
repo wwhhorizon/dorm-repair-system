@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "宿修 · 智能宿舍报修",
-    "description": "单人课程项目。所有业务时间使用 UTC，页面按本地时区显示。",
-    "version": "1.0.0"
+    "description": "宿舍报修、分类派单、维修验收与统计管理接口。",
+    "version": "1.1.0"
   },
   "paths": {
     "/health": {

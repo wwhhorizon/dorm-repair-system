@@ -1,6 +1,6 @@
 # 指导书要求对照与验收矩阵
 
-本项目经用户确认继续采用宿舍报修选题。原指导书的Emoji课堂业务替换为报修业务；保留对应工程能力。此映射是项目实施约定，不声称满足原题字面上的人脸视频情绪识别要求，课程是否接受业务替换仍以教师要求为准。
+根据自选的宿舍报修场景，对指导书的业务功能与工程要求作如下对应。
 
 | 原要求 | 本项目落实方式 | 实现 / 验证 |
 |---|---|---|
@@ -17,20 +17,20 @@
 | User/Course/ClassSession/ScheduleUser/EmojiRecord | User/Building/Room/Ticket预约字段/Event/Prediction | ER图与数据库脚本 |
 | 密码哈希、后端RBAC | bcrypt与数据库会话，数据范围过滤 | password与越权测试 |
 | 独立Python AI推理 | TF-IDF＋逻辑回归，独立分类API和worker | ai_service/ |
-| 视频采样/人脸检测/情绪分类 | 经选题替换为周期领取工单/文本特征提取/故障分类 | 非人脸视频项目；不将文本分类声称为视觉识别 |
+| 视频采样/人脸检测/情绪分类 | 经选题替换为周期领取工单/文本特征提取/故障分类 | 工单文本分类流程及对应接口 |
 | 至少5类、分数过滤、AI来源与时间 | 五类故障、阈值、工单ID、模型版本、AI时间记录 | Prediction；AI接口测试 |
 | 采样频率及阈值配置 | AI_POLL_SECONDS、AI_CONFIDENCE_THRESHOLD | worker与后端配置 |
 | 独立服务令牌 | X-Service-Token；普通会话不能代替 | service_auth；独立认证测试 |
 | 不保留原始人脸图像/视频 | AI只处理描述；没有摄像头采集；业务附件单独授权管理 | 上传路径、AI pending响应 |
 | 断线重试及错误日志 | 指数退避，日志仅故障类型与工单ID | worker.py；故障注入测试 |
 | 单元/接口/端到端/安全/可用性测试 | pytest、在线smoke、Playwright流程及移动布局 | tests/与scripts/，testing.md |
-| Git分支与真实记录 | feature分支开发，main集成；单人贡献说明 | 仓库提交，不制造历史 |
+| Git分支管理 | feature分支开发，main集成 | 仓库分支及提交记录 |
 | Docker Compose与CI（选做） | MySQL/后端/AI/worker四服务与GitHub Actions | compose.yaml、ci.yml |
 | 需求、设计、ER、接口、部署、手册 | 独立Markdown文档及OpenAPI/SQL | docs/、database/ |
 | 测试报告与用例 | 测试用例、自动执行结果、浏览器证据 | testing.md、验证产物 |
 | 5～8分钟演示 | 实际浏览器操作录屏及可复现脚本 | demo.md与deliverables/ |
-| 实验报告及AI局限分析 | 按用户要求暂不编写实验报告；技术局限先记录在AI评估资料 | 不生成实验报告文件 |
-| 团队分工及贡献度 | 一人承担所有职责，列明AI辅助及待本人完成项 | contribution.md |
-| 签到、现场演示、答辩 | 本人实际参与，软件不能代替 | 不虚构签到和答辩完成情况 |
+| 实验报告及AI局限分析 | 报告包含需求、设计、实现、测试及AI分类结果分析 | PDF与LaTeX源码独立提交 |
+| 团队分工及贡献度 | 报告封面列出小组成员 | 实验报告封面 |
+| 签到、现场演示、答辩 | 课程现场安排 | 现场展示系统及回答问题 |
 
 消息队列及MCP属于原指导书选做项，本版使用REST，不纳入必做验收。

@@ -7,3 +7,7 @@ data/
 *.pyc
 artifacts/
 ai_service/model.joblib
+
+# Local editable screen recordings and narration
+deliverables/demo-source/
+deliverables/演示视频剪辑素材.zip

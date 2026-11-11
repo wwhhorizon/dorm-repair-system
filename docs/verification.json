@@ -80,5 +80,65 @@
     "Duration: 00:05:23.30, start: 0.000000, bitrate: 100 kb/s",
     "Stream #0:0(eng): Video: vp9 (libvpx-vp9) (Profile 0), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 10 fps, 10 tbr, 1k tbn (default)"
   ],
-  "video_encoding": "VP9, 10fps; same real recording, reduced size for repository delivery"
+  "video_encoding": "VP9, 10fps; same real recording, reduced size for repository delivery",
+  "ui_refresh_2026_11_12": {
+    "pytest": {
+      "passed": 31,
+      "seconds": 92.23
+    },
+    "browser_rehearsal": {
+      "stages": 15,
+      "passed": true,
+      "page_errors": []
+    },
+    "accessibility": {
+      "login": [],
+      "dashboard": [],
+      "tickets": [],
+      "detail": [],
+      "mobile-dashboard": []
+    },
+    "fixes": [
+      "分类历史保留修改前类别",
+      "趋势按北京时间创建日期归组"
+    ],
+    "video": "deliverables/宿修-中文解说演示.mp4",
+    "recording": {
+      "passed": true,
+      "page_errors": [],
+      "scene_count": 15,
+      "statistics": {
+        "total": 3,
+        "open": 2,
+        "completed": 1,
+        "average_hours": 0.05,
+        "categories": {
+          "door": 1,
+          "electric": 1,
+          "water": 1
+        },
+        "states": {
+          "pending": 2,
+          "completed": 1
+        },
+        "days": {
+          "2026-11-12": 3
+        },
+        "ratings": {
+          "5": 1
+        },
+        "average_rating": 5.0
+      }
+    },
+    "video_check": {
+      "duration_seconds": 409.84,
+      "width": 1600,
+      "height": 900,
+      "video_codec": "H.264",
+      "audio_codec": "AAC",
+      "complete_decode": "passed",
+      "file_bytes": 13660568,
+      "audio_sample_rate": 48000
+    }
+  }
 }

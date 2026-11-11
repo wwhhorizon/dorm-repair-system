@@ -3,6 +3,16 @@ import * as view from "./view.js";
 const $ = (s) => document.querySelector(s);
 let socket, toastTimer;
 let requestVersion = 0;
+async function dashboardData() {
+  const filters = Object.fromEntries(
+    Object.entries(state.filters).filter(([k]) => k !== "status"),
+  );
+  const [stats, tickets] = await Promise.all([
+    api("/statistics?" + query(filters)),
+    api("/tickets?" + query(filters) + "&page_size=100"),
+  ]);
+  return view.dashboard(stats, tickets.items);
+}
 function toast(message, error = false) {
   $("#toast").textContent = message;
   $("#toast").className = error ? "show error" : "show";
@@ -57,30 +67,22 @@ function connect() {
   );
   socket.onmessage = async (e) => {
     const d = JSON.parse(e.data);
-    $("#live-status").textContent = `实时连接 · ${d.total} 张工单`;
+    $("#live-status").textContent = "已同步";
     if (state.page === "dashboard") {
       try {
-        const s = await api(
-          "/statistics?" +
-            query(
-              Object.fromEntries(
-                Object.entries(state.filters).filter(([k]) => k !== "status"),
-              ),
-            ),
-        );
+        const html = await dashboardData();
         if (state.page !== "dashboard") return;
         const container = document.createElement("div");
-        container.innerHTML = view.dashboard(s);
-        for (const selector of [".metrics", ".chart-grid"]) {
+        container.innerHTML = html;
+        for (const selector of [".metrics", ".work-queue", ".chart-grid"]) {
           const target = $("#content " + selector);
           if (target) target.replaceWith(container.querySelector(selector));
         }
       } catch {}
     }
   };
-  socket.onclose = () =>
-    ($("#live-status").textContent = "实时连接断开 · 自动重连中");
-  socket.onerror = () => ($("#live-status").textContent = "实时连接暂不可用");
+  socket.onclose = () => ($("#live-status").textContent = "重新连接中…");
+  socket.onerror = () => ($("#live-status").textContent = "连接中…");
 }
 setInterval(() => {
   if (
@@ -109,17 +111,7 @@ async function render() {
   });
   let html = "";
   try {
-    if (page === "dashboard")
-      html = view.dashboard(
-        await api(
-          "/statistics?" +
-            query(
-              Object.fromEntries(
-                Object.entries(state.filters).filter(([k]) => k !== "status"),
-              ),
-            ),
-        ),
-      );
+    if (page === "dashboard") html = await dashboardData();
     if (page === "tickets")
       html = view.tickets(
         await api("/tickets?" + query() + "&page=" + state.listPage),
@@ -133,12 +125,31 @@ async function render() {
     if (page === "settings") html = view.settings();
     if (page === "audit") {
       const logs = await api("/admin/audit");
+      const labels = {
+        "auth.login": "登录账号",
+        "auth.logout": "退出登录",
+        "auth.register": "注册账号",
+        "auth.password": "修改密码",
+        "ticket.create": "提交报修",
+        "ticket.assign": "安排维修",
+        "ticket.start": "开始维修",
+        "ticket.finish": "提交完工",
+        "ticket.reject": "申请返修",
+        "ticket.accept": "验收通过",
+        "ticket.comment": "补充说明",
+        "ticket.classify": "确认分类",
+        "ticket.cancel": "取消报修",
+        "csv.export": "导出工单",
+        "ai.ingest": "更新分类建议",
+        "user.status": "调整账号状态",
+        "location.create": "添加宿舍位置",
+      };
       html =
-        '<section class="panel"><h2>最近100条操作</h2><ol class="timeline">' +
+        '<section class="panel"><h2>操作记录</h2><ol class="timeline">' +
         logs
           .map(
             (e) =>
-              `<li><span>${view.date(e.created_at)} · ${view.esc(e.actor || "系统服务")}</span><p>${view.esc(e.action)} ${view.esc(e.detail)}</p></li>`,
+              `<li><span>${view.date(e.created_at)} · ${view.esc(e.actor || "系统服务")}</span><p>${view.esc(labels[e.action] || e.action)}${e.action.startsWith("ticket.") || e.action === "ai.ingest" ? ` · 工单 #${view.esc(e.detail)}` : ""}</p></li>`,
           )
           .join("") +
         "</ol></section>";
@@ -190,6 +201,10 @@ $("#auth-toggle").onclick = () => {
     ? "已有账号？登录"
     : "还没有账号？注册";
   $("#auth-error").textContent = "";
+  $("#password-hint").hidden = !state.register;
+  $("#auth-form [name=password]").autocomplete = state.register
+    ? "new-password"
+    : "current-password";
 };
 $("#auth-form").onsubmit = (e) => {
   e.preventDefault();
