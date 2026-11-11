@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-11",
+  "environment": "Windows / Python 3.12 / local SQLite; headless Chromium",
+  "pytest": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "29",
+    "time": "77.288",
+    "timestamp": "2026-11-11T10:58:18.011484+08:00",
+    "hostname": "Whyhow的电脑"
+  },
+  "browser": {
+    "passed": true,
+    "stages": [
+      "01 / 宿修：学生报修、管理员派单、维修人员处理，学生验收。三种角色协作。",
+      "02 / 学生工作台：查看自己的报修数量、处理进度和历史记录。",
+      "03 / 提交问题：选择宿舍位置，填写故障现象；系统稍后给出分类建议。",
+      "04 / 工单已创建。每次状态变化都保留操作者、时间和处理说明。",
+      "05 / 本地AI分类：独立服务处理故障文字，显示建议类别与模型分数，管理员负责确认。",
+      "06 / 管理员确认类别、安排维修人员和预约时间。派单通过后端权限和版本校验。",
+      "07 / 维修人员只能看到分配给自己的工单，核对位置、描述和预约时间后开始维修。",
+      "08 / 维修提交完工说明，工单进入待验收。学生可以确认，也可以填写原因申请返修。",
+      "09 / 学生完成验收并评价。处理历史完整保留，结束工单不再允许任意修改。",
+      "10 / 数据隔离验证：另一名学生访问刚才的工单，后端返回404；各人只能查看自己的数据。",
+      "11 / 实时统计：总量、待解决、类别分布、趋势、完工时长和评分。可以组合筛选楼栋与日期。",
+      "12 / 管理员可以导出CSV，维护账号和宿舍位置。导出操作和权限变更均保留审计记录。",
+      "13 / 审计与交付：浏览器界面、本地AI、权限控制、测试和部署资料共同构成完整项目。"
+    ],
+    "page_errors": [],
+    "ticket_id": 7,
+    "seconds": 326.6,
+    "video": "deliverables/demo.webm"
+  },
+  "performance": {
+    "1": {
+      "requests": 100,
+      "tickets": 50,
+      "concurrency": 1,
+      "p50_ms": 203.49,
+      "p95_ms": 252.23,
+      "max_ms": 336.03,
+      "throughput_per_second": 4.99
+    },
+    "10": {
+      "requests": 100,
+      "tickets": 50,
+      "concurrency": 10,
+      "p50_ms": 671.52,
+      "p95_ms": 906.39,
+      "max_ms": 1524.94,
+      "throughput_per_second": 14.1
+    }
+  },
+  "accessibility": {
+    "login": [],
+    "dashboard": [],
+    "tickets": [],
+    "detail": [],
+    "mobile-dashboard": []
+  },
+  "mysql_compose": {
+    "status": "not_executed",
+    "reason": "GitHub account locked due to a billing issue; local Docker not installed",
+    "run_url": "https://github.com/wwhhorizon/dorm-repair-system/actions/runs/42948414507"
+  },
+  "experiment_report": "deferred_by_user",
+  "timezone_test": {
+    "timezone": "Asia/Shanghai",
+    "passed": true,
+    "date": "2026-11-11",
+    "checks": [
+      "local-date-roundtrip",
+      "UTC-boundaries",
+      "reload-state"
+    ]
+  },
+  "video_probe": [
+    "Duration: 00:05:23.30, start: 0.000000, bitrate: 100 kb/s",
+    "Stream #0:0(eng): Video: vp9 (libvpx-vp9) (Profile 0), yuv420p(tv, progressive), 1440x1000, SAR 1:1 DAR 36:25, 10 fps, 10 tbr, 1k tbn (default)"
+  ],
+  "video_encoding": "VP9, 10fps; same real recording, reduced size for repository delivery"
+}

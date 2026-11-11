@@ -22,9 +22,9 @@ def main():
                 page.evaluate('''text=>{let e=document.getElementById('demo-caption');if(!e){e=document.createElement('div');e.id='demo-caption';Object.assign(e.style,{position:'fixed',bottom:'12px',left:'10%',width:'80%',padding:'14px',background:'#173b32',color:'white',zIndex:'9999',borderRadius:'10px',fontSize:'17px',textAlign:'center',boxShadow:'0 4px 20px #0003'});document.body.append(e)}e.textContent=text}''',text)
                 page.wait_for_timeout(24000)
         def login(name):
+            page.request.post('http://127.0.0.1:8000/api/auth/logout',headers={'X-Requested-With':'RepairApp'})
             page.goto('http://127.0.0.1:8000')
-            if page.locator('#shell').is_visible():
-                page.locator('#logout').click();expect(page.locator('#auth')).to_be_visible()
+            expect(page.locator('#auth')).to_be_visible()
             page.locator('[name=username]').fill(name)
             page.locator('[name=password]').fill(os.environ['DEMO_PASSWORD'])
             page.locator('#auth-submit').click();expect(page.locator('#shell')).to_be_visible(timeout=20000)
@@ -55,7 +55,7 @@ def main():
         page.locator('#close-detail').click();page.locator(f'[data-ticket="{ticket_id}"]').click()
         stage('05 / 本地AI分类：独立服务处理故障文字，显示建议类别与模型分数，管理员负责确认。')
         page.locator('#classify-form select').select_option('water');page.locator('#classify-form button').click()
-        expect(page.locator('#classify-form select')).to_have_value('water')
+        expect(page.locator('.timeline')).to_contain_text('分类确认')
         page.locator('#assign-form [name=assignee_id]').select_option(label='repair')
         page.locator('#assign-form [name=scheduled_at]').fill((datetime.now()+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M'))
         page.locator('#assign-form [name=note]').fill('已确认水路故障，请检查接头密封。')

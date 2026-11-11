@@ -57,4 +57,4 @@ SQLite位于data/repair.db，附件在data/uploads；复制数据库备份时先
 
 ## 环境验证边界
 
-本地Windows没有Docker命令，SQLite和浏览器通过本机执行验证；MySQL容器由仓库CI验收，其实际运行结果以GitHub Actions为准。最终测试记录应注明CI结果，不能用“配置存在”替代“容器已运行”。
+本地Windows没有Docker命令，SQLite和浏览器通过本机执行验证。MySQL容器验收流水线已提供，但2026-11-11首次GitHub Actions任务未启动，平台提示账号因账单问题被锁定（“The job was not started because your account is locked due to a billing issue.”）。因此MySQL/Compose运行验收尚未完成；解决GitHub账号账单状态后可重新运行CI，或在装有Docker的机器执行上述命令。不能用“配置存在”替代“容器已运行”。

@@ -1,8 +1,136 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>宿修 · 宿舍报修协作</title><link rel="stylesheet" href="/static/style.css"><script type="module" src="/static/controller.js"></script></head>
-<body><div id="toast" role="status" aria-live="polite"></div>
-<section id="auth" class="auth"><div class="intro"><span class="wordmark">宿修 <small>DORM CARE</small></span><p class="eyebrow">把宿舍里的小问题，认真解决。</p><h1>从一张报修单，<br>到安心的每一天。</h1><p>记录问题、安排维修、跟踪进度。<br>每一次处理，都有清楚的回应。</p><div class="intro-footer">提交 · 处理 · 验收 <span>校园宿舍服务</span></div></div>
-<form id="auth-form" class="auth-form"><p class="eyebrow">欢迎使用宿修</p><h2 id="auth-title">登录你的账号</h2><p class="muted">查看报修进度，继续处理待办。</p><label>用户名<input name="username" autocomplete="username" required minlength="3" maxlength="40"></label><label>密码<input name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="64"><small>至少10位，同时包含字母和数字</small></label><div id="register-fields" hidden><label>邮箱（选填）<input name="email" type="email" maxlength="120"></label><label>身份<select name="role"><option value="student">学生</option><option value="technician">维修人员</option><option value="admin">管理员</option></select></label><label>邀请码（维修人员与管理员必填）<input name="invite_code" autocomplete="off"></label></div><button class="primary" id="auth-submit">登录</button><button type="button" id="auth-toggle" class="text">还没有账号？注册</button><p id="auth-error" role="alert" class="error"></p></form></section>
-<div id="shell" class="shell" hidden><aside><a class="wordmark" href="/">宿修 <small>DORM CARE</small></a><p class="nav-caption">工作空间</p><nav id="nav"></nav><div class="sidebar-bottom"><div id="identity"></div><button id="logout" class="text">退出登录</button></div></aside><main><header><div><p id="role-caption" class="eyebrow"></p><h1 id="page-title"></h1></div><span class="live"><i></i><span id="live-status">正在连接</span></span></header><div id="content"></div></main></div>
-<dialog id="detail"><div class="dialog-top"><h2>工单详情</h2><button id="close-detail" class="ghost" aria-label="关闭详情">关闭</button></div><div id="detail-content"></div></dialog>
-</body></html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta content="#18344c" name="theme-color" />
+    <title>宿修 · 中科大高新校区</title>
+    <link href="/static/style.css" rel="stylesheet" />
+    <script src="/static/controller.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">跳到主要内容</a>
+    <div aria-live="polite" id="toast" role="status"></div>
+    <section class="auth" id="auth">
+      <div class="intro">
+        <img
+          alt="中国科学技术大学高新校区建筑夜景"
+          class="intro-photo"
+          fetchpriority="high"
+          height="1920"
+          src="/static/images/ustc-gaoxin-night.webp"
+          width="1281"
+        />
+        <span class="wordmark"
+          ><span aria-hidden="true" class="brand-glyph">⌂</span> 宿修
+          <small>中科大高新校区</small></span
+        >
+        <div class="intro-message">
+          <p class="eyebrow">中国科学技术大学 · 高新校区</p>
+          <h1>在高新，<br />安心住。</h1>
+          <p>一处报修，全程跟进。<br />让每一次维修，都有清楚的进度。</p>
+        </div>
+
+        <div class="intro-footer">
+          <span>为校园生活里的每件小事</span
+          ><a
+            href="https://zsb.ustc.edu.cn/2024/0326/c35540a633998/page.htm"
+            rel="noopener noreferrer"
+            target="_blank"
+            >图片：中国科大招生网</a
+          >
+        </div>
+      </div>
+      <form class="auth-form" id="auth-form">
+        <p class="eyebrow">欢迎使用宿修</p>
+        <h2 id="auth-title">登录你的账号</h2>
+        <p class="muted">查看报修进度，继续处理待办。</p>
+        <label
+          >用户名<input
+            autocomplete="username"
+            maxlength="40"
+            minlength="3"
+            name="username"
+            required="" /></label
+        ><label
+          >密码<input
+            autocomplete="current-password"
+            maxlength="64"
+            minlength="10"
+            name="password"
+            required=""
+            type="password"
+          /><small>至少10位，同时包含字母和数字</small></label
+        >
+        <div hidden="" id="register-fields">
+          <label
+            >邮箱（选填）<input
+              maxlength="120"
+              name="email"
+              type="email" /></label
+          ><label
+            >身份<select name="role">
+              <option value="student">学生</option>
+              <option value="technician">维修人员</option>
+              <option value="admin">管理员</option>
+            </select></label
+          ><label
+            >邀请码（维修人员与管理员必填）<input
+              autocomplete="off"
+              name="invite_code"
+          /></label>
+        </div>
+        <button class="primary" id="auth-submit">登录</button
+        ><button class="text" id="auth-toggle" type="button">
+          还没有账号？注册
+        </button>
+        <p class="error" id="auth-error" role="alert"></p>
+        <p class="course-note">软件工程课程实践项目</p>
+      </form>
+    </section>
+    <div class="shell" hidden="" id="shell">
+      <aside>
+        <a class="wordmark" href="/"
+          ><span aria-hidden="true" class="brand-glyph">⌂</span> 宿修
+          <small>中科大高新校区</small></a
+        >
+        <p class="nav-caption">服务工作台</p>
+        <nav aria-label="主要导航" id="nav"></nav>
+        <div class="sidebar-note">
+          <span aria-hidden="true">⌁</span>
+          <p>每一张工单，<br />都有清楚的下一步。</p>
+        </div>
+        <div class="sidebar-bottom">
+          <div aria-hidden="true" class="avatar"></div>
+          <div id="identity"></div>
+          <button class="text" id="logout">退出登录</button>
+        </div>
+      </aside>
+      <main>
+        <header>
+          <div>
+            <p class="eyebrow" id="role-caption"></p>
+            <h1 id="page-title"></h1>
+          </div>
+          <div class="header-tools">
+            <time id="today"></time
+            ><span class="live"
+              ><i></i><span id="live-status">正在连接…</span></span
+            >
+          </div>
+        </header>
+        <div id="content" tabindex="-1"></div>
+      </main>
+    </div>
+    <dialog id="detail">
+      <div class="dialog-top">
+        <h2>工单详情</h2>
+        <button aria-label="关闭详情" class="ghost" id="close-detail">
+          关闭
+        </button>
+      </div>
+      <div id="detail-content"></div>
+    </dialog>
+  </body>
+</html>

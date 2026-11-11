@@ -94,3 +94,33 @@ def test_image_validation_and_authorization(clients,ticket):
     assert clients['other'].get(f'/api/attachments/{aid}').status_code==404
     r=clients['student'].get(f'/api/attachments/{aid}')
     assert r.status_code==200 and r.headers['content-type']=='image/jpeg'
+
+def test_worker_network_failure_retry_and_ingestion(monkeypatch):
+    import httpx
+    from ai_service import worker
+    calls=[]
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path=='/api/ai/pending':return httpx.Response(200,json=[{'id':7,'description':'水龙头一直漏水，请维修'}])
+        if request.url.path=='/predict':return httpx.Response(200,json={'category':'water','confidence':.8,'model_version':'test'})
+        return httpx.Response(200,json={'accepted':True})
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert worker.run_once(client)==1
+    assert calls==['/api/ai/pending','/predict','/api/ai/results']
+    sleeps=[];attempts=[]
+    monkeypatch.setattr('sys.argv',['worker'])
+    def fail_then_stop(client):
+        attempts.append(1)
+        if len(attempts)<=3:raise httpx.ConnectError('simulated disconnect')
+        raise KeyboardInterrupt
+    monkeypatch.setattr(worker,'run_once',fail_then_stop)
+    monkeypatch.setattr(worker.time,'sleep',lambda seconds:sleeps.append(seconds))
+    with pytest.raises(KeyboardInterrupt):worker.main()
+    assert sleeps==[1,2,4]
+
+def test_login_rate_limit_and_attachment_size(clients,ticket):
+    c=clients['student']
+    for _ in range(10):assert c.post('/api/auth/login',json={'username':'unknown','password':'Unknown12345'}).status_code==401
+    assert c.post('/api/auth/login',json={'username':'unknown','password':'Unknown12345'}).status_code==429
+    r=c.post(f"/api/tickets/{ticket['id']}/attachments",files={'file':('huge.jpg',b'x'*(5*1024*1024+1),'image/jpeg')})
+    assert r.status_code==413
